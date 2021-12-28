@@ -1,22 +1,14 @@
 import WebSocket from "ws";
+import {waitSeconds} from "../utils/stopwatch";
 
 const clientWsConnSet : Set<WebSocket> = new Set<WebSocket>();
 
-function waitSeconds(seconds: number) {
-    const endMilliSeconds = Date.now() + seconds * 1000;
-    let currentMilliSeconds = Date.now();
-
-    while (currentMilliSeconds < endMilliSeconds) {
-        currentMilliSeconds = Date.now();
-    }
-}
-
 function addListenersToWsConn(ws: WebSocket) {
-    clientWsConnSet.add(ws);
 
-    const clientNumber = clientWsConnSet.size;
-
+    const clientNumber = clientWsConnSet.size + 1;
     if (clientNumber > 10) return;
+
+    clientWsConnSet.add(ws);
 
     // client 는 connection 이 아니라 open.
     ws.on('open', ()=>{
@@ -28,7 +20,20 @@ function addListenersToWsConn(ws: WebSocket) {
     // 기대하는 바는 딱 하나만 끊어지기 (10번)
     ws.on('close', (code, reason)=>{
         console.log('client Number ', clientNumber, 'is closed!');
-        clientWsConnSet.forEach(clientWsConn=>clientWsConn.removeAllListeners('close'));
+        clientWsConnSet.delete(ws);
+
+        for (const wsConn of clientWsConnSet) {
+            // wsConn.removeAllListeners('close');
+            // wsConn.removeAllListeners('message');
+            wsConn.close(1000);
+        }
+
+        // waitSeconds(5);
+        // addListenersToWsConn(new WebSocket('ws://localhost:9000'));
+    });
+
+    ws.on('message', (msg)=>{
+        console.log('message from server : %s', msg);
     })
 }
 
