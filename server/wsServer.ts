@@ -1,5 +1,6 @@
 import WebSocket, {WebSocketServer} from "ws";
 import {waitSeconds} from "../utils/stopwatch";
+import {errLogger} from "../utils/logger";
 
 const wss = new WebSocketServer({ port : 9000 });
 
@@ -18,20 +19,19 @@ wss.on('connection', function connection(ws, req) {
 
 
         // CASE I. 전체 다 연결 해제
-        // clientWsSet.forEach(wsConn=>{
-        //     wsConn.close(1000, 'close all connections from server!');
-        // });
+        wss.clients.forEach(wsConn=>{
+            wsConn.close(1000, 'close all connections from server!');
+        });
         // clientWsSet.clear();
 
         // CASE II. 마지막 놈 하나만 연결 해제.
         // ws.close(1000, 'close all connections from server!');
-        // wss.clients.delete(ws);
 
         // 반드시 모든 이벤트 리스너를 수동으로 제거해줘야함.
         // 더해진 리스너들은 엘리먼트에 남아있다 지워지기 전까지 수동으로, 모던 브라우저 내에서
 
-        wss.clients.forEach(wsConn=>wsConn.send('msgggggg'));
-        wss.clients.forEach(wsConn=>wsConn.close(1000, 'server normal finish'));
+        // wss.clients.forEach(wsConn=>wsConn.send('msgggggg'));
+        // wss.clients.forEach(wsConn=>wsConn.close(1000, 'server normal finish'));
 
         // wss.clients.clear();
         // waitSeconds(3);
@@ -64,22 +64,17 @@ wss.on('connection', function connection(ws, req) {
 
     // client 가 비로소 'close' 를 보내거나
     // server 가 close 를 보내야만함.
-    ws.on('close', (code)=>{
-        console.log('closed from the client : %d', code);
-        console.log('client number : %d', wss.clients.size);
-    })
-});
+    ws.on('close', (code, reason)=>{
+        errLogger.error({
+            eventName: 'close',
+            code: code,
+            reason: Buffer.from(reason).toString('utf-8'),
+            timestamp: new Date()
+        });
 
+        process.exit(-1);
 
-wss.on('close', function close() {
-    console.log('closed from the client!');
-});
-
-
-setTimeout(()=>{
-    console.log('after closed all!');
-    wss.clients.forEach(client=>{
-        switch (client.readyState) {
+        switch (ws.readyState) {
             case WebSocket.CONNECTING:
                 console.log('client state : CONNECTING');
                 break;
@@ -96,5 +91,13 @@ setTimeout(()=>{
                 console.log('client state : ?????');
                 break;
         }
-    });
-}, 20000)
+        console.log('closed from the client : %d', code);
+        console.log('client number : %d', wss.clients.size);
+    })
+});
+
+
+wss.on('close', function close() {
+    console.log('closed from the client!');
+});
+
