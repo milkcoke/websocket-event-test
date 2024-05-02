@@ -1,5 +1,6 @@
 import WebSocket from "ws";
 import ConnectionCounter from '../domain/ConnectionCounter'
+import {sleep} from '../utils/sleep'
 
 const connectionCounter = ConnectionCounter.getInstance()
 
@@ -23,13 +24,15 @@ function main() {
     });
 
     ws.on('message', (msg)=>{
-        console.dir(msg)
-    });
-
-    // 자신이 보낸 close 요청도 바로 close 이벤트를 트리거함.
-    ws.on('close', (code, reason)=>{
-        console.log('client close code : %d', code);
+        // console.dir(msg.toString())
     });
 }
 
-main()
+
+(async ()=>{
+  for (let i = 0; i < 20_000; i++) {
+    await sleep(4)
+    main()
+  }
+
+})()
