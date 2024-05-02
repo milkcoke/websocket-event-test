@@ -72,8 +72,6 @@ wss.on('connection', function connection(ws, req) {
             timestamp: new Date()
         });
 
-        process.exit(-1);
-
         switch (ws.readyState) {
             case WebSocket.CONNECTING:
                 console.log('client state : CONNECTING');
