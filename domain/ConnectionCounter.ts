@@ -1,6 +1,7 @@
 
 export default class ConnectionCounter {
-  private connectionCount: number = 0
+
+  private _connectionCount: number = 0
   private static instance: ConnectionCounter
 
   private constructor() {}
@@ -13,10 +14,14 @@ export default class ConnectionCounter {
   }
 
   public incr(): void {
-    this.connectionCount++
+    this._connectionCount++
   }
 
   public decr() {
-    this.connectionCount--
+    this._connectionCount--
+  }
+
+  get connectionCount(): number {
+    return this._connectionCount
   }
 }
